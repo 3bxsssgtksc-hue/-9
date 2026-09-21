@@ -59,6 +59,7 @@
         opacity: 0;
         transform: translateY(12px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -845,7 +846,7 @@
 82. 宮部聡太|https://jr-official.starto.jp/s/jr/persons/355?ima=5130
 83. 元木湧|https://jr-official.starto.jp/s/jr/persons/177?ima=5130
 84. 本高克樹|https://jr-official.starto.jp/s/jr/persons/36?ima=5231
-85. 矢花黎|https://jr-official.starto.jp/s/jr/persons/40?ima=5231
+85. 矢��黎|https://jr-official.starto.jp/s/jr/persons/40?ima=5231
 86. 山井飛翔|https://jr-official.starto.jp/s/jr/persons/182?ima=5327
 87. 山岸想|https://jr-official.starto.jp/s/jr/persons/356?_=1790013807651
 88. 山崎旺夏|https://jr-official.starto.jp/s/jr/persons/357?ima=0128
@@ -899,7 +900,7 @@
 136. 中本輝|https://jr-official.starto.jp/s/jr/persons/382?ima=2247
 137. 西野統真|https://jr-official.starto.jp/s/jr/persons/393?ima=2348
 138. 西野湊人|https://jr-official.starto.jp/s/jr/persons/364?ima=2348
-139. 西村拓哉|https://jr-official.starto.jp/s/jr/persons/58?ima=2348
+139. 西村���哉|https://jr-official.starto.jp/s/jr/persons/58?ima=2348
 140. 野田開仁|https://jr-official.starto.jp/s/jr/persons/396?ima=2449
 141. 野母一晟|https://jr-official.starto.jp/s/jr/persons/397?ima=2449
 142. 伯井太陽|https://jr-official.starto.jp/s/jr/persons/386?ima=2449
@@ -1003,27 +1004,55 @@
       const preview = document.createElement("div");
       preview.className = "profile-preview";
 
-      const image = document.createElement("img");
-      image.src = member.imageUrl;
-      image.alt = `${member.name}の写真`;
-      image.loading = "lazy";
+      const loading = document.createElement("div");
+      loading.className = "profile-loading";
+      loading.textContent = "画像を読み込み中…";
 
-      image.addEventListener("error", () => {
-        image.remove();
+      const img = document.createElement("img");
+      img.src = member.imageUrl;
+      img.alt = `${member.name}の画像`;
+      img.loading = "lazy";
+      img.decoding = "async";
+
+      const timeoutId = window.setTimeout(() => {
+        if (loading.isConnected) {
+          loading.innerHTML = `
+            <div>
+              <strong>画像の読み込みに時間がかかっています</strong>
+              <small>imagesフォル��のファイル名を確認してください</small>
+            </div>
+          `;
+        }
+      }, 8000);
+
+      img.addEventListener("load", () => {
+        window.clearTimeout(timeoutId);
+        if (loading.isConnected) {
+          loading.remove();
+        }
+      });
+
+      img.addEventListener("error", () => {
+        window.clearTimeout(timeoutId);
+        if (loading.isConnected) {
+          loading.remove();
+        }
 
         const error = document.createElement("div");
         error.className = "profile-error";
         error.innerHTML = `
           <div>
-            <strong>写真を表示できません</strong>
-            <small>${member.imageUrl}を確認してください</small>
+            <strong>画像を表示できません</strong>
+            <small>images/${member.id}.jpg が存在するか確認してください</small>
           </div>
         `;
 
         preview.appendChild(error);
       });
 
-      preview.appendChild(image);
+      preview.appendChild(loading);
+      preview.appendChild(img);
+
       return preview;
     }
 
@@ -1080,12 +1109,18 @@
           selectedIds.delete(member.id);
           card.classList.remove("selected");
           heart.textContent = "♡";
-          selectOverlay.setAttribute("aria-label", `${member.name}を選択`);
+          selectOverlay.setAttribute(
+            "aria-label",
+            `${member.name}を選択`
+          );
         } else {
           selectedIds.add(member.id);
           card.classList.add("selected");
           heart.textContent = "♥";
-          selectOverlay.setAttribute("aria-label", `${member.name}の選択を解除`);
+          selectOverlay.setAttribute(
+            "aria-label",
+            `${member.name}の選択を解除`
+          );
         }
       });
 
@@ -1094,27 +1129,42 @@
 
     function renderSelectionPage() {
       const start = pageIndex * GROUP_SIZE;
-      const currentMembers = displayPool.slice(start, start + GROUP_SIZE);
-      const totalPages = Math.ceil(displayPool.length / GROUP_SIZE);
+      const currentMembers = displayPool.slice(
+        start,
+        start + GROUP_SIZE
+      );
 
-      progressText.textContent = `${pageIndex + 1} / ${totalPages}`;
+      const totalPages = Math.ceil(
+        displayPool.length / GROUP_SIZE
+      );
+
+      progressText.textContent =
+        `${pageIndex + 1} / ${totalPages}`;
+
       progressBar.style.width =
-        `${((start + currentMembers.length) / displayPool.length) * 100}%`;
+        `${((start + currentMembers.length) /
+          displayPool.length) * 100}%`;
 
       if (phase === "qualifying") {
         phaseBadge.textContent = "🌱 予選";
-        gameHeading.textContent = "この中で好きな顔を選んでね";
-        gameDescription.textContent = "複数OK。深く考えず、直感でどうぞ💗";
+        gameHeading.textContent =
+          "この中で好きな顔を選んでね";
+        gameDescription.textContent =
+          "複数OK。深く考えず、直感でどうぞ💗";
       } else {
         phaseBadge.textContent = "💗 絞り込み";
-        gameHeading.textContent = "この中からさらに選んでね";
-        gameDescription.textContent = "9人になるまで好きな顔を選びます";
+        gameHeading.textContent =
+          "この中からさらに選んでね";
+        gameDescription.textContent =
+          "9人になるまで好きな顔を選びます";
       }
 
       memberGrid.innerHTML = "";
 
       currentMembers.forEach(member => {
-        memberGrid.appendChild(createMemberCard(member));
+        memberGrid.appendChild(
+          createMemberCard(member)
+        );
       });
     }
 
@@ -1149,7 +1199,12 @@
       selectedIds.forEach(id => {
         const member = members.find(item => item.id === id);
 
-        if (member && !pickedMembers.some(item => item.id === member.id)) {
+        if (
+          member &&
+          !pickedMembers.some(
+            item => item.id === member.id
+          )
+        ) {
           pickedMembers.push(member);
         }
       });
@@ -1202,7 +1257,9 @@
     function createRankingCard(button, member) {
       button.innerHTML = "";
 
-      button.appendChild(createProfilePreview(member));
+      button.appendChild(
+        createProfilePreview(member)
+      );
 
       const info = document.createElement("div");
       info.className = "member-info";
@@ -1224,7 +1281,15 @@
     }
 
     function startRanking(candidates) {
-      const uniqueMembers = [...new Map(candidates.map(member => [member.id, member])).values()];
+      const uniqueMembers = [
+        ...new Map(
+          candidates.map(member => [
+            member.id,
+            member
+          ])
+        ).values()
+      ];
+
       rankingCandidates = shuffle(uniqueMembers);
 
       if (rankingCandidates.length === 1) {
@@ -1269,10 +1334,14 @@
         return;
       }
 
-      const candidate = rankingCandidates[rankingIndex];
-      const compared = rankedMembers[compareIndex];
+      const candidate =
+        rankingCandidates[rankingIndex];
 
-      rankingProgress.textContent = `${rankingIndex + 1}人目を比較中`;
+      const compared =
+        rankedMembers[compareIndex];
+
+      rankingProgress.textContent =
+        `${rankingIndex + 1}人目を比較中`;
 
       createRankingCard(leftChoice, candidate);
       createRankingCard(rightChoice, compared);
@@ -1280,7 +1349,11 @@
       leftChoice.onclick = () => {
         saveRankingState();
 
-        rankedMembers.splice(compareIndex, 0, candidate);
+        rankedMembers.splice(
+          compareIndex,
+          0,
+          candidate
+        );
 
         rankingIndex++;
         compareIndex = 0;
@@ -1302,7 +1375,8 @@
         renderRanking();
       };
 
-      rankingBackButton.disabled = rankingHistory.length === 0;
+      rankingBackButton.disabled =
+        rankingHistory.length === 0;
     }
 
     function createResultCard(member, rank) {
@@ -1315,10 +1389,13 @@
 
       const badge = document.createElement("span");
       badge.className = "rank-badge";
-      badge.textContent = rank === 1 ? "👑 1位" : `${rank}位`;
+      badge.textContent =
+        rank === 1 ? "👑 1位" : `${rank}位`;
 
       card.appendChild(badge);
-      card.appendChild(createProfilePreview(member));
+      card.appendChild(
+        createProfilePreview(member)
+      );
 
       const info = document.createElement("div");
       info.className = "member-info";
@@ -1343,7 +1420,12 @@
 
     function renderResult(result) {
       const topNine = result.slice(0, FINAL_COUNT);
-      const displayOrder = [3, 4, 5, 1, 0, 2, 6, 7, 8];
+
+      const displayOrder = [
+        3, 4, 5,
+        1, 0, 2,
+        6, 7, 8
+      ];
 
       resultGrid.innerHTML = "";
 
@@ -1354,7 +1436,9 @@
           return;
         }
 
-        resultGrid.appendChild(createResultCard(member, index + 1));
+        resultGrid.appendChild(
+          createResultCard(member, index + 1)
+        );
       });
 
       topList.innerHTML = "<h3>TOP9</h3>";
@@ -1364,7 +1448,10 @@
         row.className = "top-row";
 
         const rank = document.createElement("span");
-        rank.textContent = index === 0 ? "👑1位" : `${index + 1}位`;
+        rank.textContent =
+          index === 0
+            ? "👑1位"
+            : `${index + 1}位`;
 
         const name = document.createElement("span");
         name.textContent = member.name;
@@ -1384,7 +1471,9 @@
       const text = [
         "ジュニア好き顔選抜9選",
         "",
-        ...result.map((member, index) => `${index + 1}位：${member.name}`),
+        ...result.map((member, index) => {
+          return `${index + 1}位：${member.name}`;
+        }),
         "",
         "#ジュニア好き顔選抜9選"
       ].join("\n");
@@ -1408,36 +1497,57 @@
         await navigator.clipboard.writeText(text);
         alert("結果をコピーしました。");
       } catch (error) {
-        window.prompt("結果をコピーしてください。", text);
+        window.prompt(
+          "結果をコピーしてください��",
+          text
+        );
       }
     }
 
-    document.getElementById("startButton").addEventListener("click", startGame);
+    document
+      .getElementById("startButton")
+      .addEventListener("click", startGame);
 
-    document.getElementById("nextButton").addEventListener("click", () => {
-      saveSelectionState();
-      finishSelectionPage();
-    });
+    document
+      .getElementById("nextButton")
+      .addEventListener("click", () => {
+        saveSelectionState();
+        finishSelectionPage();
+      });
 
-    document.getElementById("skipButton").addEventListener("click", () => {
-      saveSelectionState();
-      selectedIds.clear();
-      finishSelectionPage();
-    });
+    document
+      .getElementById("skipButton")
+      .addEventListener("click", () => {
+        saveSelectionState();
+        selectedIds.clear();
+        pageIndex++;
+        finishSelectionPage();
+      });
 
-    document.getElementById("backButton").addEventListener("click", restoreSelectionState);
+    document
+      .getElementById("backButton")
+      .addEventListener("click", restoreSelectionState);
 
-    rankingBackButton.addEventListener("click", restoreRankingState);
+    rankingBackButton.addEventListener(
+      "click",
+      restoreRankingState
+    );
 
-    document.getElementById("printButton").addEventListener("click", () => {
-      window.print();
-    });
+    document
+      .getElementById("printButton")
+      .addEventListener("click", () => {
+        window.print();
+      });
 
-    document.getElementById("shareButton").addEventListener("click", shareResult);
+    document
+      .getElementById("shareButton")
+      .addEventListener("click", shareResult);
 
-    document.getElementById("restartButton").addEventListener("click", () => {
-      showScreen(startScreen);
-    });
+    document
+      .getElementById("restartButton")
+      .addEventListener("click", () => {
+        showScreen(startScreen);
+      });
   </script>
 </body>
 </html>
