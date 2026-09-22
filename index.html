@@ -1029,72 +1029,33 @@
      * 紐付け先サイトをカード内に表示します。
      */
     function createProfilePreview(member) {
-      const preview = document.createElement("div");
-      preview.className = "profile-preview";
+  const preview = document.createElement("div");
+  preview.className = "profile-preview";
 
-      const loading = document.createElement("div");
-      loading.className = "profile-loading";
-      loading.textContent = "プロフィールを読み込み中…";
+  const image = document.createElement("img");
+  image.src = member.imagePath;
+  image.alt = `${member.name}の写真`;
+  image.loading = "lazy";
 
-      const iframe = document.createElement("iframe");
-      iframe.src = member.profileUrl;
-      iframe.title = `${member.name}のプロフィール`;
-      iframe.loading = "lazy";
-      iframe.referrerPolicy = "strict-origin-when-cross-origin";
+  image.addEventListener("error", () => {
+    image.style.display = "none";
 
-      let loaded = false;
+    const error = document.createElement("div");
+    error.className = "profile-error";
+    error.innerHTML = `
+      <div>
+        <strong>写真を表示できません</strong>
+        <small>${member.imagePath}</small>
+      </div>
+    `;
 
-      const timeoutId = window.setTimeout(() => {
-        if (!loaded && loading.isConnected) {
-          loading.innerHTML = `
-            <div>
-              <strong>表示に時間がかかっています</strong>
-              <small>
-                紐付け先サイトが埋め込み非対応の場合があります
-              </small>
-            </div>
-          `;
-        }
-      }, 8000);
+    preview.appendChild(error);
+  });
 
-      iframe.addEventListener("load", () => {
-        loaded = true;
-        window.clearTimeout(timeoutId);
+  preview.appendChild(image);
 
-        if (loading.isConnected) {
-          loading.remove();
-        }
-      });
-
-      iframe.addEventListener("error", () => {
-        window.clearTimeout(timeoutId);
-
-        if (loading.isConnected) {
-          loading.remove();
-        }
-
-        iframe.remove();
-
-        const error = document.createElement("div");
-        error.className = "profile-error";
-        error.innerHTML = `
-          <div>
-            <strong>プロフィールを表示できません</strong>
-            <small>
-              紐付け先サイトが埋め込み非対応です
-            </small>
-          </div>
-        `;
-
-        preview.appendChild(error);
-      });
-
-      preview.appendChild(loading);
-      preview.appendChild(iframe);
-
-      return preview;
-    }
-
+  return preview;
+}
     function createMemberCard(member) {
       const card = document.createElement("div");
       card.className = "member-card";
